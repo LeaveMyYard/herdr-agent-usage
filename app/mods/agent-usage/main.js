@@ -47,7 +47,11 @@ function openPanes() {
   const byPane = new Map(panes().map((p) => [p.pane, p]));
   return agents().map((a) => {
     const key = a.program?.key ?? a.app ?? "";
-    return { paneId: a.pane, agent: AGENT_IDS[key] ?? key, label: a.space_name || a.tab_name, cwd: byPane.get(a.pane)?.cwd ?? null };
+    // The pane share names a pane by its tab (or space and tab number when
+    // the tab is unnamed); usagebar adds the short terminal address only to
+    // tell two panes of one tab apart.
+    const label = /^\d+$/.test(a.tab_name ?? "") ? `${a.space_name} ${a.tab_name}` : a.tab_name || a.space_name;
+    return { paneId: a.address, agent: AGENT_IDS[key] ?? key, label, cwd: byPane.get(a.pane)?.cwd ?? null };
   }).filter((p) => p.agent);
 }
 
@@ -251,9 +255,9 @@ export default class AgentUsage extends View {
     }
     const share = p.paneActivity?.panes ?? [];
     if (share.length) {
-      rows.push(h_flex().gap(6).py(2).text_size(11.5).flex_wrap()
-        .child(div().text_color(t.dim).child(`${p.paneActivity.tag} share`))
-        .child(div().text_color(t.muted).child(share.map((s) => `${s.label} ${Math.round(s.sharePercent)}%`).join(" · "))));
+      rows.push(h_flex().gap(6).py(2).items_start().text_size(11.5)
+        .child(div().flex_none().text_color(t.dim).child(`${p.paneActivity.tag} share`))
+        .child(div().flex_1().min_w(0).text_color(t.muted).child(share.map((s) => `${s.label} ${Math.round(s.sharePercent)}%`).join(" · "))));
     }
     if (!p.windows.length && p.note) rows.push(this.callout(p.note, t));
     else if (p.note && !stale) rows.push(div().py(2).text_size(11.5).text_color(t.dim).child(p.note));
@@ -269,9 +273,10 @@ export default class AgentUsage extends View {
     const parts = note.split("`");
     return h_flex().my(4).px(10).py(7).gap(0).flex_wrap().items_center().rounded(7).bg("#ffffff08").border_1().border_color(t.border)
       .text_size(12).text_color(t.muted)
-      .children(parts.map((part, i) => (i % 2
-        ? div().mx(3).px(4).rounded(4).bg(t.raised).text_color(t.foreground).font_family(settings().font_family ?? "JetBrains Mono").child(part)
-        : div().child(part))));
+      // Words are separate items so a long note wraps around the code.
+      .children(parts.flatMap((part, i) => (i % 2
+        ? [div().mr(4).px(4).rounded(4).bg(t.raised).text_color(t.foreground).font_family(settings().font_family ?? "JetBrains Mono").child(part)]
+        : part.split(/\s+/).filter(Boolean).map((word) => div().mr(4).child(word)))));
   }
 
   compactRow(p, g, t) {
@@ -309,7 +314,7 @@ export default class AgentUsage extends View {
         .child(seg("view-compact", "Compact", this.compact, (_e, cx) => this.setCompact(true, cx))))
       .child(h_flex().id("refresh").h(26).px(10).gap(6).items_center().rounded(7).bg(t.raised).text_size(12).text_color(t.foreground)
         .cursor_pointer().hover((s) => s.bg(t.hover)).on_click((_e, cx) => this.refresh(cx, true))
-        .child(this.busy ? "Refreshing…" : "Refresh")
+        .child(div().text_color(this.busy ? t.dim : t.foreground).child("Refresh"))
         .child(div().font_family(settings().font_family ?? "JetBrains Mono").text_size(11).text_color(t.dim).child("r")));
   }
 }
