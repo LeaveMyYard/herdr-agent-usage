@@ -111,7 +111,9 @@ copy_app() {
     echo "$dst" >> "$manifest.new"
   done < <(sources)
   # Tell the panel where its binary and config are.
-  printf '{\n  "binary": "%s",\n  "configDir": "%s"\n}\n' "$bin" "$config_dir" > "$app_home/mods/agent-usage/local.json"
+  # AGENT_USAGE_OPEN_COMMAND: the command toasts run to open the panel, when the
+  # layout's tab bar is not agent-usage-tabs (default: agent-usage-tabs.open-usage).
+  printf '{\n  "binary": "%s",\n  "configDir": "%s",\n  "openCommand": "%s"\n}\n' "$bin" "$config_dir" "${AGENT_USAGE_OPEN_COMMAND:-agent-usage-tabs.open-usage}" > "$app_home/mods/agent-usage/local.json"
 }
 
 check_mods() {

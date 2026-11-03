@@ -14,7 +14,10 @@ import { exec, home, appHome, readTextFile, watchFolder, notify, agents, panes, 
 const VISIBLE_MS = 15000;
 const HIDDEN_EVERY = 4; // ticks: 60 s while hidden
 const WATCH_DEBOUNCE_MS = 3000;
-const OPEN_ACTION = { name: "agent-usage-tabs.open-usage" };
+// The command a toast runs to open this panel: the tab bar mod that hosts the
+// Usage button. local.json `openCommand` overrides it for layouts whose tab bar
+// is another clone (e.g. one combined with other mods).
+const OPEN_COMMAND = "agent-usage-tabs.open-usage";
 
 // Provider families as usagebar names them; icons from herdr-app's program table.
 const FAMILIES = {
@@ -120,7 +123,7 @@ export default class AgentUsage extends View {
     const families = new Map((this.report?.providers ?? []).map((p) => [p.providerId, p.family]));
     for (const toast of JSON.parse(r.stdout).toasts ?? []) {
       const family = FAMILIES[families.get(toast.providerId)];
-      notify({ title: toast.title, body: toast.body, level: toast.level, icon: family?.icon, action: OPEN_ACTION });
+      notify({ title: toast.title, body: toast.body, level: toast.level, icon: family?.icon, action: { name: this.paths.openCommand ?? OPEN_COMMAND } });
     }
   }
 
