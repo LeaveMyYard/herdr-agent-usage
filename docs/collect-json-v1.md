@@ -36,6 +36,9 @@ Adding fields is compatible. Renaming or removing one bumps `version`.
     "identity": "me@example.com",    // login email, else the account's config/home dir
     "account": "me@example.com",     // the login (email / account id) when readable, else ""
     "home": "/home/me/.claude-work", // the account's config/home dir, where its agent writes readings
+    "configured": true,              // from an explicit [[<family>.profiles]] entry
+    "inUse": true,                   // false: nothing on this machine (no install, no profile,
+                                     // no data); hosts hide these. Always true with [ui] providers
     "sameAccountAs": "",             // providerId of an earlier entry with the same account:
                                      // show the account once; its windows are shared (freshest wins)
     "planType": "Max",

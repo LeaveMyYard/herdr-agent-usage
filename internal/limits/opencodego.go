@@ -435,7 +435,7 @@ func CollectOpenCodeLimits(nowMs int64, dbPath string) ProviderLimits {
 	}
 	if len(events) == 0 {
 		note := "no opencode-go assistant costs in local db"
-		return ProviderLimits{ProviderID: "opencode", Label: "OpenCode", Source: dbPath, FetchedAtMs: nowMs, Note: &note, NoReadingYet: true}
+		return ProviderLimits{ProviderID: "opencode", Label: "OpenCode", Source: dbPath, FetchedAtMs: nowMs, Note: &note}
 	}
 	return ProviderLimitsFromGoCostEvents(events, nowMs)
 }

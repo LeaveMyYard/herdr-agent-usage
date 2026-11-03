@@ -40,6 +40,20 @@ func ResolvedLimitPercent() core.LimitPercent {
 	return cfg.LimitPercent
 }
 
+// ResolvedProviderFamilies is the [ui] providers setting as a family set, or
+// nil when unset (every provider).
+func ResolvedProviderFamilies() map[string]bool {
+	cfg := setup.LoadPluginConfig(setup.ResolvePluginConfigDir(processEnvMap()))
+	if len(cfg.Providers) == 0 {
+		return nil
+	}
+	families := make(map[string]bool, len(cfg.Providers))
+	for _, id := range cfg.Providers {
+		families[id] = true
+	}
+	return families
+}
+
 // ResolvedCacheDisplay returns whether cache data may be rendered. It keeps the
 // sidebar and Agent Usage pane behind one explicit user preference.
 func ResolvedCacheDisplay() bool {
@@ -79,6 +93,7 @@ func applyProfileGrouping(pl ProviderLimits, p claude.ClaudeProfile, multiProfil
 	}
 	pl = withProfileIdentity(pl, p.ID, p.Label, identity)
 	pl.Home = p.ConfigDir
+	pl.Configured = !p.Implicit
 	if hasEmail {
 		pl.Account = strings.ToLower(email)
 	}
@@ -163,6 +178,7 @@ func codexProfileByIDIn(profiles []codex.CodexProfile, id string) (codex.CodexPr
 func applyCodexProfileGrouping(pl ProviderLimits, p codex.CodexProfile, multiProfile bool) ProviderLimits {
 	pl = withProfileIdentity(pl, p.ID, p.Label, p.Home)
 	pl.Home = p.Home
+	pl.Configured = !p.Implicit
 	pl.Account = codex.AccountIDIn(p.Home)
 	if !multiProfile {
 		return pl
@@ -177,6 +193,7 @@ func applyCodexProfileGrouping(pl ProviderLimits, p codex.CodexProfile, multiPro
 func applyGrokProfileGrouping(pl ProviderLimits, profile grok.GrokProfile, multiProfile bool) ProviderLimits {
 	pl = withProfileIdentity(pl, profile.ID, profile.Label, profile.Home)
 	pl.Home = profile.Home
+	pl.Configured = !profile.Implicit
 	if !multiProfile {
 		return pl
 	}
@@ -190,6 +207,7 @@ func applyGrokProfileGrouping(pl ProviderLimits, profile grok.GrokProfile, multi
 func applyOpenCodeProfileGrouping(pl ProviderLimits, profile opencode.OpenCodeProfile, multiProfile bool) ProviderLimits {
 	pl = withProfileIdentity(pl, profile.ID, profile.Label, profile.DataDir)
 	pl.Home = profile.DataDir
+	pl.Configured = !profile.Implicit
 	if !multiProfile {
 		return pl
 	}

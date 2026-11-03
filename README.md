@@ -262,6 +262,9 @@ window, from least to most severe. `limit_percent = "used"` inverts the displaye
 number (and bar fill) on the pane, sidebar `$limit`, statusLine, and toast body;
 notify firing stays on remaining thresholds. `cache_display = false` clears cache
 metadata from every sidebar pane and suppresses the Agent Usage low-cache warning.
+`providers = ["claude", "codex"]` (optional, under `[ui]`) collects and shows only
+those providers (`claude`, `codex`, `opencode`, `grok`, `agy`, `kilo`); unset,
+every provider is collected as before.
 
 
 ### Multiple Claude accounts
@@ -610,6 +613,12 @@ scripts/herdr-app-install.sh uninstall   # remove exactly what install added
 - Config dirs signed into the same account (e.g. the everyday `~/.claude` and
   a dedicated `~/.claude-2`) share that account's freshest windows, and the
   panel shows the account once, marked "also <label>" for the other dir.
+- The panel lists only providers in use on this machine: a configured
+  profile, any reading, or an installed harness (its home dir exists) that is
+  signed out or has not run yet. To show a fixed list instead, set
+  `[ui] providers = ["claude", "codex"]` (provider ids: `claude`, `codex`,
+  `opencode`, `grok`, `agy`, `kilo`); this also limits the herdr pane and
+  sidebar collection.
 - The panel refreshes every 15 s while shown, every 60 s while hidden, and when
   a statusLine cache or Codex rollout changes. Click it and press `r` to
   refresh.

@@ -60,7 +60,11 @@ type ProviderReport struct {
 	Account       string `json:"account"`
 	SameAccountAs string `json:"sameAccountAs"`
 	// Home is the account's config/home dir, where its agent writes readings.
-	Home         string  `json:"home"`
+	Home string `json:"home"`
+	// InUse is false for a provider with nothing on this machine (no
+	// install, no profile, no data); Configured marks an explicit profile.
+	InUse        bool    `json:"inUse"`
+	Configured   bool    `json:"configured"`
 	PlanType     *string `json:"planType"`
 	Source       string  `json:"source"`
 	FetchedAtMs  int64   `json:"fetchedAtMs"`
@@ -209,6 +213,8 @@ func providerReport(p ProviderLimits, percent core.LimitPercent, nowMs int64) Pr
 		Identity:      p.Identity,
 		Account:       p.Account,
 		Home:          p.Home,
+		InUse:         p.InUse,
+		Configured:    p.Configured,
 		SameAccountAs: p.SameAccountAs,
 		PlanType:      p.PlanType,
 		Source:        p.Source,

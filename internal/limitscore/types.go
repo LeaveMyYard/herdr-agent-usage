@@ -83,6 +83,12 @@ type ProviderLimits struct {
 	// than the adapter's freshness bound (the same age the "stale ~Nm ago"
 	// Note reports). Nil means fresh or unknown.
 	StaleMinutes *int
+	// Configured is true when the entry comes from an explicit
+	// [[<family>.profiles]] entry rather than the implicit default.
+	Configured bool
+	// InUse says the provider is in use on this machine (see
+	// limits.MarkInUse); hosts hide entries that are not.
+	InUse bool
 	// NoReadingYet marks an entry whose source simply has not recorded a
 	// reading yet (the agent has not run with this account), as opposed to
 	// a broken or missing source.
