@@ -68,7 +68,10 @@ Adding fields is compatible. Renaming or removing one bumps `version`.
     "models": [{ "modelId": "deepseek-chat", "tokens": 332000, "costUsd": 0.02 }],
     "paneActivity": null
   }],
-  "lowCachePanes": [{ "label": "Task A", "hitPercent": 35 }]
+  "lowCachePanes": [{ "label": "Task A", "hitPercent": 35 }],
+  // folders whose changes mean fresh data: each Claude profile's statusLine
+  // cache folder and each Codex home's sessions tree (may not exist yet)
+  "watchDirs": ["/home/me/.claude/herdr-usagebar", "/home/me/.codex/sessions"]
 }
 ```
 

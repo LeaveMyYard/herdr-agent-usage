@@ -41,6 +41,8 @@ type CollectReport struct {
 	Providers     []ProviderReport    `json:"providers"`
 	APIUsage      []APIUsageReport    `json:"apiUsage"`
 	LowCachePanes []LowCachePaneEntry `json:"lowCachePanes"`
+	// WatchDirs are folders whose changes mean fresh data (see WatchDirs).
+	WatchDirs []string `json:"watchDirs"`
 }
 
 // ProviderReport is one subscription account.
@@ -149,6 +151,7 @@ type CollectReportInput struct {
 	Providers     []ProviderLimits
 	APIUsage      []APIProviderUsage
 	LowCachePanes []LowCachePane
+	WatchDirs     []string
 	Filter        CollectFilter
 	LimitPercent  core.LimitPercent
 	NowMs         int64
@@ -170,6 +173,7 @@ func BuildCollectReport(in CollectReportInput) CollectReport {
 		Providers:     make([]ProviderReport, 0, len(in.Providers)),
 		APIUsage:      make([]APIUsageReport, 0, len(in.APIUsage)),
 		LowCachePanes: make([]LowCachePaneEntry, 0, len(in.LowCachePanes)),
+		WatchDirs:     append([]string{}, in.WatchDirs...),
 	}
 	for _, p := range in.Providers {
 		report.Providers = append(report.Providers, providerReport(p, percent, in.NowMs))

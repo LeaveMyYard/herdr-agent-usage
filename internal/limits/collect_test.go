@@ -455,3 +455,25 @@ func TestCollectAllProviderLimits_StampsTheFamily(t *testing.T) {
 		}
 	}
 }
+
+func TestWatchDirs_ListsEachProfilesCacheAndSessionsFolder(t *testing.T) {
+	pluginConfigDir := t.TempDir()
+	t.Setenv("HERDR_PLUGIN_CONFIG_DIR", pluginConfigDir)
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	work, codexHome := filepath.Join(home, ".claude-work"), filepath.Join(home, ".codex-dev")
+	toml := "[[claude.profiles]]\nid = \"claude\"\nconfig_dir = \"" + filepath.Join(home, ".claude") + "\"\n\n" +
+		"[[claude.profiles]]\nid = \"work\"\nconfig_dir = \"" + work + "\"\n\n" +
+		"[[codex.profiles]]\nid = \"dev\"\ncodex_home = \"" + codexHome + "\"\n"
+	if err := os.WriteFile(filepath.Join(pluginConfigDir, "config.toml"), []byte(toml), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	want := []string{
+		filepath.Join(home, ".claude", "herdr-usagebar"),
+		filepath.Join(work, "herdr-usagebar"),
+		filepath.Join(codexHome, "sessions"),
+	}
+	if got := WatchDirs(); strings.Join(got, "\n") != strings.Join(want, "\n") {
+		t.Fatalf("WatchDirs() = %v, want %v", got, want)
+	}
+}

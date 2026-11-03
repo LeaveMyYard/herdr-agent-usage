@@ -6,6 +6,7 @@ package limits
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/senna-lang/herdr-agent-usage/internal/core"
@@ -217,4 +218,26 @@ func openCodeProfileByIDIn(profiles []opencode.OpenCodeProfile, id string) (open
 		}
 	}
 	return opencode.OpenCodeProfile{}, false
+}
+
+// WatchDirs lists the folders whose changes mean fresh limit data for the
+// configured profiles: each Claude profile's statusLine cache folder and each
+// Codex home's sessions tree. A host can watch them to re-collect sooner than
+// its timer. Folders may not exist yet.
+func WatchDirs() []string {
+	var dirs []string
+	seen := map[string]bool{}
+	add := func(dir string) {
+		if dir != "" && !seen[dir] {
+			seen[dir] = true
+			dirs = append(dirs, dir)
+		}
+	}
+	for _, p := range ResolvedClaudeProfiles() {
+		add(filepath.Dir(p.LimitsCache))
+	}
+	for _, home := range configuredCodexHomes() {
+		add(filepath.Join(home, "sessions"))
+	}
+	return dirs
 }
