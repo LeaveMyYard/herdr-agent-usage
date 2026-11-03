@@ -41,13 +41,15 @@ func processProvider(
 		return &next
 	}
 
+	heading, account := toastHeading(provider)
 	text := ratelimit.FormatProviderPrimaryNotification(
-		provider.Label,
+		heading,
 		*decision.BucketToNotify,
 		*primary.ResetsAt,
 		nowMs,
 		percent,
 	)
+	text.Title = ratelimit.WithAccountLabel(text.Title, account)
 	return ratelimit.ApplyNotifyResult(previous, decision.NewState, notify(text.Title, text.Body))
 }
 
@@ -86,4 +88,19 @@ func CheckProviderPrimaryLimits(
 	claudeProfiles []claude.ClaudeProfile,
 ) ProviderNotifyState {
 	return CheckProviderPrimaryLimitsWithThresholds(providers, current, nowMs, nil, notify, claudeProfiles, core.LimitPercentRemaining)
+}
+
+// toastHeading picks the provider name and account a toast title shows. An
+// entry grouped with other accounts of its family is titled by the family
+// ("Codex limit") and names its own account; a lone entry keeps its label
+// and names no account, as before.
+func toastHeading(provider ProviderLimits) (heading, account string) {
+	if provider.GroupLabel == "" {
+		return provider.Label, ""
+	}
+	account = provider.ProfileLabel
+	if account == "" {
+		account = provider.Label
+	}
+	return provider.GroupLabel, account
 }

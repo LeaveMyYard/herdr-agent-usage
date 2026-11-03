@@ -203,3 +203,30 @@ func captureCollectJSON(t *testing.T, args []string) []byte {
 	}
 	return raw
 }
+
+// A Claude toast names its account unless it is the lone implicit default.
+func TestStatusLineNotifierNamesTheAccount(t *testing.T) {
+	defaultProfile := claude.ClaudeProfile{ID: claude.DefaultProfileID, Label: claude.DefaultProfileLabel}
+	work := claude.ClaudeProfile{ID: "claude-work", Label: "work"}
+	cases := []struct {
+		name     string
+		profile  claude.ClaudeProfile
+		profiles []claude.ClaudeProfile
+		want     string
+	}{
+		{"lone default", defaultProfile, []claude.ClaudeProfile{defaultProfile}, "Session limit"},
+		{"default among several", defaultProfile, []claude.ClaudeProfile{defaultProfile, work}, "Session limit · Claude"},
+		{"configured account", work, []claude.ClaudeProfile{defaultProfile, work}, "Session limit · work"},
+		{"lone configured account", work, []claude.ClaudeProfile{work}, "Session limit · work"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var got string
+			notify := statusLineNotifier(func(title, _ string) bool { got = title; return true }, tc.profile, tc.profiles)
+			notify("Session limit", "body")
+			if got != tc.want {
+				t.Fatalf("title = %q, want %q", got, tc.want)
+			}
+		})
+	}
+}

@@ -593,14 +593,7 @@ func runStatusLine() {
 		}
 	}
 
-	// Prefix non-default profile toasts with the profile label so two accounts'
-	// alerts are distinguishable.
-	notify := herdrcli.ShowNotification
-	if !claude.IsDefaultProfile(profile) {
-		label := profile.Label
-		inner := notify
-		notify = func(title, body string) bool { return inner(label+": "+title, body) }
-	}
+	notify := statusLineNotifier(herdrcli.ShowNotification, profile, profiles)
 
 	config := setup.LoadPluginConfig(setup.ResolvePluginConfigDir(env))
 	func() {
@@ -612,6 +605,17 @@ func runStatusLine() {
 		runStatusLineNotifications(profile, stdinJSON, nowMs, config, notify)
 	}()
 	printStatusLineSummary(stdinJSON)
+}
+
+// statusLineNotifier names the account in a Claude toast title ("Session
+// limit · work") whenever the account is not the lone implicit default, so
+// two accounts' alerts are distinguishable.
+func statusLineNotifier(show ratelimit.ShowNotificationFn, profile claude.ClaudeProfile, profiles []claude.ClaudeProfile) ratelimit.ShowNotificationFn {
+	if len(profiles) <= 1 && claude.IsDefaultProfile(profile) {
+		return show
+	}
+	label := profile.Label
+	return func(title, body string) bool { return show(ratelimit.WithAccountLabel(title, label), body) }
 }
 
 func printStatusLineSummary(stdinJSON string) {
