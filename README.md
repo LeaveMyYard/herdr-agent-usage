@@ -574,6 +574,46 @@ it may still query that pane to resolve the working directory. Without `--all`,
 it lists Herdr panes to select active subscription providers. Plain `collect`
 and the interactive panel retain the full activity data.
 
+## herdr-app
+
+[herdr-app](https://herdr.dev) (the desktop herdr) does not load herdr
+plugins; `app/` holds an Agent Usage panel for it instead: a `usage` panel in
+the right column beside Files and Changes, a Usage button in the tab bar, and
+rate-limit toasts through herdr-app's own notifications
+([design](docs/design/herdr-app/SPEC.md)). It needs Go and herdr-app, not the
+herdr TUI or this plugin installed in it.
+
+```sh
+scripts/herdr-app-install.sh install     # build, copy, herdr-app check
+herdr-app do layout.switch '{"name":"agent-usage"}'
+herdr-app do layout.switch '{"name":"main"}'   # back to the stock layout
+scripts/herdr-app-install.sh uninstall   # remove exactly what install added
+```
+
+- **What it adds** to `~/.config/herdr-app`: `mods/agent-usage` (the panel),
+  `mods/agent-usage-tabs` (a clone of the shipped `tabs` mod with a Usage
+  button), and `layouts/agent-usage.json` (a clone of `main` whose
+  `panel-body` stack also holds the panel and whose tab bar uses that clone).
+  It refuses to install over anything it did not install itself.
+- **Binary:** `~/.local/bin/usagebar` (`AGENT_USAGE_BIN`). **Config:**
+  `~/.config/agent-usage/config.toml` (`AGENT_USAGE_CONFIG_DIR`), the same
+  format as the plugin config above, so `[[claude.profiles]]`,
+  `[[codex.profiles]]` and friends work unchanged. The panel runs
+  `usagebar collect --format v1` and `usagebar notify --json`
+  ([contract](docs/collect-json-v1.md)) with `HERDR_PLUGIN_CONFIG_DIR` set to
+  that folder; install seeds it with `[notify] delivery = "external"`.
+- **Claude statusLine (optional, recommended):** it keeps the 5h window fresh.
+  Use one command for every Claude config dir; it routes by
+  `CLAUDE_CONFIG_DIR` and must see the same config:
+  `HERDR_PLUGIN_CONFIG_DIR=$HOME/.config/agent-usage $HOME/.local/bin/usagebar statusline`.
+  Without it, Claude limits come from each dir's `.claude.json`.
+- Config dirs signed into the same account (e.g. the everyday `~/.claude` and
+  a dedicated `~/.claude-2`) share that account's freshest windows, and the
+  panel shows the account once, marked "also <label>" for the other dir.
+- The panel refreshes every 15 s while shown, every 60 s while hidden, and when
+  a statusLine cache or Codex rollout changes. Click it and press `r` to
+  refresh.
+
 ## Data handling
 
 Local usage is read from files that the agents already keep on your machine:
