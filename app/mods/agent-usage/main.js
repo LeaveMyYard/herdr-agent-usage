@@ -159,7 +159,8 @@ export default class AgentUsage extends View {
   // Entries shown as rows (a second dir signed into an account already
   // listed folds into that row), grouped by family when 2+ share it.
   groups() {
-    const providers = this.report?.providers ?? [];
+    // Providers with nothing on this machine (usagebar's inUse) never show.
+    const providers = (this.report?.providers ?? []).filter((p) => p.inUse !== false);
     const alsoIn = new Map();
     for (const p of providers) {
       if (!p.sameAccountAs) continue;
