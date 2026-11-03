@@ -98,6 +98,27 @@ func TestStatusLineNotificationsDisabled(t *testing.T) {
 	}
 }
 
+// With external delivery the bridge stays silent and leaves the window state
+// untouched, so `notify --json` still sees the crossing.
+func TestStatusLineNotificationsExternalDelivery(t *testing.T) {
+	profile := claude.ClaudeProfile{StateDir: t.TempDir()}
+	config := setup.PluginConfig{NotifyEnabled: true, NotifyDelivery: setup.NotifyDeliveryExternal, RemainingThresholds: []int{50, 20, 10, 5}}
+	notifications := 0
+	runStatusLineNotifications(
+		profile,
+		`{"rate_limits":{"five_hour":{"used_percentage":55,"resets_at":1800000000}}}`,
+		1_700_000_000_000,
+		config,
+		func(_, _ string) bool { notifications++; return true },
+	)
+	if notifications != 0 {
+		t.Fatalf("external delivery sent %d toasts through herdr", notifications)
+	}
+	if _, err := os.Stat(filepath.Join(profile.StateDir, "rate-limit-state.json")); !os.IsNotExist(err) {
+		t.Fatalf("external delivery recorded state: %v", err)
+	}
+}
+
 // A quota dashboard must not wait for Herdr or read pane activity transcripts.
 // Legacy collection and active-provider filtering still query Herdr.
 func TestCollectQuotasOnly(t *testing.T) {

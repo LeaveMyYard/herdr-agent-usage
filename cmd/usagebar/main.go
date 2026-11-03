@@ -63,6 +63,10 @@ func main() {
 			os.Exit(1)
 		}
 	case "notify":
+		if hasFlag(args, "--json") {
+			runNotifyJSON(args)
+			return
+		}
 		runNotify()
 	case "startup":
 		// Herdr [[startup]] / live handoff: restore every open pane's tokens.
@@ -106,6 +110,9 @@ Usage:
                                      --all shows every provider
   usagebar limits --once [--all]     Print panel once to stdout
   usagebar notify                    Check non-Claude primary rate-limit toasts
+  usagebar notify --json [--panes JSON|-]
+                                     Print due toasts as JSON (all providers,
+                                     Claude included) and record them as shown
   usagebar check-update --current-version X.Y.Z [--force] [--quiet]
                                      Check GitHub Releases for a newer plugin version
   usagebar statusline                Claude Code statusLine (stdin rate_limits)
@@ -215,7 +222,7 @@ func runStatusLineNotifications(
 	config setup.PluginConfig,
 	notify ratelimit.ShowNotificationFn,
 ) {
-	if !config.NotifyEnabled {
+	if !config.HerdrDelivers() {
 		return
 	}
 	ratelimit.RunRateLimitCheckWithThresholdsIn(profile.StateDir, stdinJSON, nowMs, config.RemainingThresholds, notify, config.LimitPercent)
@@ -509,10 +516,10 @@ func runLimitsPane(args []string) error {
 
 func runNotify() {
 	env := environment()
-	if !notificationsEnabled(env) {
+	config := setup.LoadPluginConfig(setup.ResolvePluginConfigDir(env))
+	if !config.HerdrDelivers() {
 		return
 	}
-	config := setup.LoadPluginConfig(setup.ResolvePluginConfigDir(env))
 	nowMs := time.Now().UnixMilli()
 	opts := limits.DefaultCollectOptions()
 	// Never toast about subscription windows for pay-as-you-go setups.
@@ -521,6 +528,32 @@ func runNotify() {
 	providers := limits.CollectAllProviderLimits(resolveCwd(), nowMs, opts)
 	limits.NotifyProviderPrimaryLimitsWithThresholds(providers, nowMs, config.RemainingThresholds, config.LimitPercent)
 
+}
+
+// runNotifyJSON prints every toast due now for a host to post itself and
+// records them as shown. Like herdr delivery it honours [notify] enabled and
+// the billing gate (no toasts for pay-as-you-go setups); --panes supplies the
+// open panes that gate reads.
+func runNotifyJSON(args []string) {
+	env := environment()
+	config := setup.LoadPluginConfig(setup.ResolvePluginConfigDir(env))
+	report := limits.PendingToastsReport{Version: limits.CollectReportVersion, Toasts: []limits.PendingToast{}}
+	if config.NotifyEnabled {
+		listPanes, err := collectPaneSource(args)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "usagebar notify: %v\n", err)
+			os.Exit(2)
+		}
+		nowMs := time.Now().UnixMilli()
+		opts := limits.DefaultCollectOptions()
+		snaps, panesOK := listPanes()
+		opts.Only = limits.BillingProviderFilter(snaps, panesOK, limits.DefaultBillingDeps())
+		providers := limits.CollectAllProviderLimits(resolveCwd(), nowMs, opts)
+		report = limits.CollectPendingToasts(providers, nowMs, config.RemainingThresholds, config.LimitPercent)
+	}
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	_ = enc.Encode(report)
 }
 
 func startIdleWatch() {
@@ -611,10 +644,10 @@ func runStatusLine() {
 // limit · work") whenever the account is not the lone implicit default, so
 // two accounts' alerts are distinguishable.
 func statusLineNotifier(show ratelimit.ShowNotificationFn, profile claude.ClaudeProfile, profiles []claude.ClaudeProfile) ratelimit.ShowNotificationFn {
-	if len(profiles) <= 1 && claude.IsDefaultProfile(profile) {
+	label := claude.ToastAccountLabel(profile, profiles)
+	if label == "" {
 		return show
 	}
-	label := profile.Label
 	return func(title, body string) bool { return show(ratelimit.WithAccountLabel(title, label), body) }
 }
 
