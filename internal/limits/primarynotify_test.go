@@ -230,3 +230,20 @@ func TestCheckProviderPrimaryLimits_GroupedAccountIsNamedInTheTitle(t *testing.T
 		})
 	}
 }
+
+// Codex sessions of one account report its reset seconds apart; the
+// provider-limit state must treat that as the same window, not re-toast.
+func TestCheckProviderPrimaryLimits_ResetJitterDoesNotRenotify(t *testing.T) {
+	b := ratelimit.Bucket50
+	current := ProviderNotifyState{"codex": &ratelimit.WindowState{ResetsAt: notifyResetsAt, NotifiedBucket: &b}}
+	notified := 0
+	CheckProviderPrimaryLimits(
+		[]ProviderLimits{notifyTestProvider(func(p *ProviderLimits) { r := notifyResetsAt + 5; p.Primary.ResetsAt = &r })},
+		current, notifyNowMs,
+		func(_, _ string) bool { notified++; return true },
+		defaultClaudeProfiles,
+	)
+	if notified != 0 {
+		t.Fatalf("re-notified %d times on a 5 s reset jitter", notified)
+	}
+}

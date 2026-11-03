@@ -67,8 +67,24 @@ func severityRankOf(bucket *Bucket, buckets []Bucket) int {
 	return -1
 }
 
+// sameWindowResetSlackSeconds is how far two readings' resetsAt may differ
+// and still be the same window. Sessions of one account report a reset a few
+// seconds apart (Codex rollouts written moments apart: 1794317308 vs
+// 1794317313); an exact match would treat every switch between them as a new
+// window and re-fire its toast. A real reset moves resetsAt by a whole window
+// (hours or days), far beyond this.
+const sameWindowResetSlackSeconds = 600
+
+func isSameWindow(previous *WindowState, resetsAt int64) bool {
+	if previous == nil {
+		return false
+	}
+	d := previous.ResetsAt - resetsAt
+	return d >= -sameWindowResetSlackSeconds && d <= sameWindowResetSlackSeconds
+}
+
 func decideBucket(input WindowInput, previous *WindowState, buckets []Bucket) BucketDecision {
-	isNewWindow := previous == nil || previous.ResetsAt != input.ResetsAt
+	isNewWindow := !isSameWindow(previous, input.ResetsAt)
 	var notifiedBucket *Bucket
 	if !isNewWindow && previous != nil {
 		notifiedBucket = previous.NotifiedBucket

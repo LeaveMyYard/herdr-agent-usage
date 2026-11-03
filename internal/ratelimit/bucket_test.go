@@ -109,3 +109,19 @@ func TestDecideBucketWithThresholds_UsesConfiguredBuckets(t *testing.T) {
 		t.Fatalf("bucketToNotify = %#v, want 10", second.BucketToNotify)
 	}
 }
+
+// Two sessions of one account report its reset seconds apart. Switching
+// between them is the same window and must not re-fire the toast; a real
+// reset (a whole window later) still starts over.
+func TestDecideBucket_ResetJitterIsTheSameWindow(t *testing.T) {
+	b50 := Bucket50
+	previous := &WindowState{ResetsAt: 1794317308, NotifiedBucket: &b50}
+	jitter := DecideBucket(WindowInput{UsedPercentage: 55, ResetsAt: 1794317313}, previous)
+	if jitter.BucketToNotify != nil {
+		t.Fatalf("re-fired %v on a 5 s reset jitter", *jitter.BucketToNotify)
+	}
+	next := DecideBucket(WindowInput{UsedPercentage: 55, ResetsAt: 1794317308 + 7*24*3600}, previous)
+	if next.BucketToNotify == nil || *next.BucketToNotify != Bucket50 {
+		t.Fatalf("a new window must notify again, got %+v", next)
+	}
+}
