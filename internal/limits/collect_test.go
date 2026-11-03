@@ -213,6 +213,9 @@ func TestDefaultCollectOptions_MultiProfileGroupsEveryProfileUnderClaude(t *test
 		t.Fatalf("unlabeled profile should resolve AccountLabel from its email, got %q", got1.AccountLabel)
 	} // The profile's own id/label and its login identity are separate fields,
 	// so a renderer can show "My Work Account" and the email side by side.
+	if got0.Account != "primary@example.com" {
+		t.Fatalf("Account = %q, want the login email", got0.Account)
+	}
 	if got0.ProfileID != "claude" || got0.ProfileLabel != "My Work Account" || got0.Identity != "primary@example.com" {
 		t.Fatalf("profile identity = %q/%q/%q", got0.ProfileID, got0.ProfileLabel, got0.Identity)
 	}

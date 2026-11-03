@@ -260,6 +260,7 @@ func CollectAllProviderLimits(cwd *string, nowMs int64, opts CollectOptions) []P
 	for i := range base {
 		base[i] = expireElapsedWindows(base[i], nowMs)
 	}
+	base = ShareAccountWindows(base)
 	if opts.Attach != nil {
 		return opts.Attach(base, nowMs)
 	}

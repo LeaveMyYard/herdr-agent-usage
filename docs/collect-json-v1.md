@@ -34,6 +34,9 @@ Adding fields is compatible. Renaming or removing one bumps `version`.
     "profileId": "claude-work",      // the [[claude.profiles]] entry behind it
     "profileLabel": "work",
     "identity": "me@example.com",    // login email, else the account's config/home dir
+    "account": "me@example.com",     // the login (email / account id) when readable, else ""
+    "sameAccountAs": "",             // providerId of an earlier entry with the same account:
+                                     // show the account once; its windows are shared (freshest wins)
     "planType": "Max",
     "source": "claude statusLine cache",
     "fetchedAtMs": 1793722431615,
