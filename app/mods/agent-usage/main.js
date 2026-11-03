@@ -259,7 +259,8 @@ export default class AgentUsage extends View {
         rows.push(div().pl(32).h(20).flex().items_center().text_size(11.5).text_color(t.ansi1).child(`⚠ ${w.runOut.text}`));
       }
     }
-    const share = p.paneActivity?.panes ?? [];
+    // Hidden unless local.json sets "showPaneShare": true (the per-pane split is noisy).
+    const share = this.paths.showPaneShare ? (p.paneActivity?.panes ?? []) : [];
     if (share.length) {
       rows.push(h_flex().gap(6).py(2).items_start().text_size(11.5)
         .child(div().flex_none().text_color(t.dim).child(`${p.paneActivity.tag} share`))
