@@ -66,6 +66,10 @@ type ProviderLimits struct {
 	ProfileID    string
 	ProfileLabel string
 	Identity     string
+	// Family is the provider family this entry belongs to (the registered
+	// agent id: "claude", "codex", ...), shared by every configured account
+	// of that provider while ProviderID is per account.
+	Family string
 	// StaleMinutes is set when the windows come from an observation older
 	// than the adapter's freshness bound (the same age the "stale ~Nm ago"
 	// Note reports). Nil means fresh or unknown.

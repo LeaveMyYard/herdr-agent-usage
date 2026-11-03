@@ -427,3 +427,28 @@ func TestCollectAllProviderLimitsKeepsFreshRollingWindow(t *testing.T) {
 		}
 	}
 }
+
+// Every entry names its family, so a renderer can group and badge accounts
+// whose provider ids are arbitrary profile ids.
+func TestCollectAllProviderLimits_StampsTheFamily(t *testing.T) {
+	got := CollectAllProviderLimits(nil, 100, CollectOptions{
+		Claude: []ClaudeProfileCollector{{ID: "claude-2", Label: "work", Collector: func(_ *string, now int64) ProviderLimits {
+			return ProviderLimits{ProviderID: "claude-2", Label: "work", FetchedAtMs: now}
+		}}},
+		Codex: []CodexProfileCollector{{ID: "dev", Label: "dev", Collector: func(_ *string, now int64) ProviderLimits {
+			return ProviderLimits{ProviderID: "dev", Label: "dev", FetchedAtMs: now}
+		}}},
+	})
+	want := map[string]string{"claude-2": "claude", "dev": "codex", "opencode": "opencode", "grok": "grok"}
+	for _, spec := range singleCollectorQuotaSpecs {
+		want[spec.id] = spec.id
+	}
+	if len(got) != len(want) {
+		t.Fatalf("got %d entries, want %d", len(got), len(want))
+	}
+	for _, p := range got {
+		if p.Family != want[p.ProviderID] {
+			t.Errorf("%s: Family = %q, want %q", p.ProviderID, p.Family, want[p.ProviderID])
+		}
+	}
+}

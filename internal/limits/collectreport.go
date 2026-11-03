@@ -46,6 +46,7 @@ type CollectReport struct {
 // ProviderReport is one subscription account.
 type ProviderReport struct {
 	ProviderID   string  `json:"providerId"`
+	Family       string  `json:"family"`
 	Label        string  `json:"label"`
 	GroupLabel   string  `json:"groupLabel"`
 	AccountLabel string  `json:"accountLabel"`
@@ -189,6 +190,7 @@ func emptyMessageFor(filter CollectFilter) string {
 func providerReport(p ProviderLimits, percent core.LimitPercent, nowMs int64) ProviderReport {
 	out := ProviderReport{
 		ProviderID:   p.ProviderID,
+		Family:       p.Family,
 		Label:        p.Label,
 		GroupLabel:   p.GroupLabel,
 		AccountLabel: p.AccountLabel,

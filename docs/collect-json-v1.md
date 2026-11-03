@@ -27,6 +27,7 @@ Adding fields is compatible. Renaming or removing one bumps `version`.
   "emptyMessage": "(no agent panes open)",
   "providers": [{
     "providerId": "claude-work",
+    "family": "claude",              // the provider family, shared by all its accounts
     "label": "work",                 // the text pane's heading for a lone entry
     "groupLabel": "Claude",          // set when 2+ accounts of a family share a heading
     "accountLabel": "me@example.com",
