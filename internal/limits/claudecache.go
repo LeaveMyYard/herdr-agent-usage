@@ -196,10 +196,11 @@ func CollectClaudeLimits(nowMs int64, options CollectClaudeLimitsOptions) Provid
 	}
 	note := "no ~/.claude.json utilization and no statusLine cache"
 	return ProviderLimits{
-		ProviderID:  "claude",
-		Label:       "Claude",
-		Source:      "none",
-		FetchedAtMs: nowMs,
-		Note:        &note,
+		ProviderID:   "claude",
+		Label:        "Claude",
+		Source:       "none",
+		FetchedAtMs:  nowMs,
+		Note:         &note,
+		NoReadingYet: true,
 	}
 }

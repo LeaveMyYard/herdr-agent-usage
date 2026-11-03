@@ -57,15 +57,17 @@ type ProviderReport struct {
 	Identity     string `json:"identity"`
 	// Account is the login (email or account id) when readable, and
 	// SameAccountAs the providerId of the earlier entry for that account.
-	Account       string  `json:"account"`
-	SameAccountAs string  `json:"sameAccountAs"`
-	PlanType      *string `json:"planType"`
-	Source        string  `json:"source"`
-	FetchedAtMs   int64   `json:"fetchedAtMs"`
-	Note          *string `json:"note"`
-	Status        Status  `json:"status"`
-	StaleMinutes  *int    `json:"staleMinutes"`
-	Action        string  `json:"action"`
+	Account       string `json:"account"`
+	SameAccountAs string `json:"sameAccountAs"`
+	// Home is the account's config/home dir, where its agent writes readings.
+	Home         string  `json:"home"`
+	PlanType     *string `json:"planType"`
+	Source       string  `json:"source"`
+	FetchedAtMs  int64   `json:"fetchedAtMs"`
+	Note         *string `json:"note"`
+	Status       Status  `json:"status"`
+	StaleMinutes *int    `json:"staleMinutes"`
+	Action       string  `json:"action"`
 	// Windows are in display order (primary, secondary, tertiary) and hold
 	// only the windows the provider reported.
 	Windows      []WindowReport      `json:"windows"`
@@ -206,6 +208,7 @@ func providerReport(p ProviderLimits, percent core.LimitPercent, nowMs int64) Pr
 		ProfileLabel:  p.ProfileLabel,
 		Identity:      p.Identity,
 		Account:       p.Account,
+		Home:          p.Home,
 		SameAccountAs: p.SameAccountAs,
 		PlanType:      p.PlanType,
 		Source:        p.Source,

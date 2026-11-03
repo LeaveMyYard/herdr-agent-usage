@@ -78,6 +78,7 @@ func applyProfileGrouping(pl ProviderLimits, p claude.ClaudeProfile, multiProfil
 		identity = email
 	}
 	pl = withProfileIdentity(pl, p.ID, p.Label, identity)
+	pl.Home = p.ConfigDir
 	if hasEmail {
 		pl.Account = strings.ToLower(email)
 	}
@@ -161,6 +162,7 @@ func codexProfileByIDIn(profiles []codex.CodexProfile, id string) (codex.CodexPr
 // auth.json has no email we are willing to decode here.
 func applyCodexProfileGrouping(pl ProviderLimits, p codex.CodexProfile, multiProfile bool) ProviderLimits {
 	pl = withProfileIdentity(pl, p.ID, p.Label, p.Home)
+	pl.Home = p.Home
 	pl.Account = codex.AccountIDIn(p.Home)
 	if !multiProfile {
 		return pl
@@ -174,6 +176,7 @@ func applyCodexProfileGrouping(pl ProviderLimits, p codex.CodexProfile, multiPro
 // heading while retaining the configured account label on each row.
 func applyGrokProfileGrouping(pl ProviderLimits, profile grok.GrokProfile, multiProfile bool) ProviderLimits {
 	pl = withProfileIdentity(pl, profile.ID, profile.Label, profile.Home)
+	pl.Home = profile.Home
 	if !multiProfile {
 		return pl
 	}
@@ -186,6 +189,7 @@ func applyGrokProfileGrouping(pl ProviderLimits, profile grok.GrokProfile, multi
 // family heading while retaining the configured account label on each row.
 func applyOpenCodeProfileGrouping(pl ProviderLimits, profile opencode.OpenCodeProfile, multiProfile bool) ProviderLimits {
 	pl = withProfileIdentity(pl, profile.ID, profile.Label, profile.DataDir)
+	pl.Home = profile.DataDir
 	if !multiProfile {
 		return pl
 	}

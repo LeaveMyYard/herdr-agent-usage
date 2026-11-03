@@ -35,13 +35,15 @@ Adding fields is compatible. Renaming or removing one bumps `version`.
     "profileLabel": "work",
     "identity": "me@example.com",    // login email, else the account's config/home dir
     "account": "me@example.com",     // the login (email / account id) when readable, else ""
+    "home": "/home/me/.claude-work", // the account's config/home dir, where its agent writes readings
     "sameAccountAs": "",             // providerId of an earlier entry with the same account:
                                      // show the account once; its windows are shared (freshest wins)
     "planType": "Max",
     "source": "claude statusLine cache",
     "fetchedAtMs": 1793722431615,
     "note": null,                    // the text pane's note line, unchanged
-    "status": "ok",                  // ok | stale | needs-login | unavailable
+    "status": "ok",                  // ok | stale | needs-login | no-data | unavailable
+                                     // no-data: nothing recorded yet; fills in once the agent runs
     "staleMinutes": null,            // set with status "stale"
     "action": "",                    // e.g. "grok login" with status "needs-login"
     "windows": [{

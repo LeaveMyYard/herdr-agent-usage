@@ -211,7 +211,8 @@ func TestDefaultCollectOptions_MultiProfileGroupsEveryProfileUnderClaude(t *test
 	}
 	if got1.AccountLabel != "secondary@example.com" {
 		t.Fatalf("unlabeled profile should resolve AccountLabel from its email, got %q", got1.AccountLabel)
-	} // The profile's own id/label and its login identity are separate fields,
+	}
+	// The profile's own id/label and its login identity are separate fields,
 	// so a renderer can show "My Work Account" and the email side by side.
 	if got0.Account != "primary@example.com" {
 		t.Fatalf("Account = %q, want the login email", got0.Account)
@@ -242,8 +243,13 @@ func TestDefaultCollectOptions_SingleProfileNotGrouped(t *testing.T) {
 	}
 	if got.AccountLabel != "" {
 		t.Fatalf("single-profile mode should not set AccountLabel, got %q", got.AccountLabel)
-	} // Identity fields are stamped even when nothing is grouped; without a
+	}
+	// Identity fields are stamped even when nothing is grouped; without a
 	// readable login email the identity falls back to the config dir.
+	// Nothing recorded yet is "no data", not a failure.
+	if got.Status() != StatusNoData || !strings.HasSuffix(got.Home, ".claude") {
+		t.Fatalf("Status = %q, Home = %q", got.Status(), got.Home)
+	}
 	if got.ProfileID != "claude" || got.ProfileLabel != "Claude" || !strings.HasSuffix(got.Identity, ".claude") {
 		t.Fatalf("profile identity = %q/%q/%q", got.ProfileID, got.ProfileLabel, got.Identity)
 	}
@@ -334,7 +340,11 @@ func TestDefaultCollectOptions_MultiProfileGroupsEveryProfileUnderCodex(t *testi
 	got1 := opts.Codex[1].Collector(nil, 0)
 	if got1.GroupLabel != "Codex" || got1.AccountLabel != "dev" {
 		t.Fatalf("unlabeled profile grouping = %q/%q", got1.GroupLabel, got1.AccountLabel)
-	} // Codex has no email, so the identity is the profile's codex_home.
+	}
+	// Codex has no email, so the identity is the profile's codex_home.
+	if got0.Home != dirPersonal {
+		t.Fatalf("Home = %q, want the codex_home", got0.Home)
+	}
 	if got0.ProfileID != "codex" || got0.ProfileLabel != "personal" || got0.Identity != dirPersonal {
 		t.Fatalf("profile identity = %q/%q/%q", got0.ProfileID, got0.ProfileLabel, got0.Identity)
 	}
