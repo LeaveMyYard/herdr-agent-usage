@@ -57,6 +57,15 @@ type ProviderLimits struct {
 	// a group (e.g. the account's real login email), so members sharing one
 	// GroupLabel stay distinguishable. Ignored outside a group.
 	AccountLabel string
+	// ProfileID, ProfileLabel and Identity name the configured account this
+	// entry was collected for, as separate facts rather than folded into
+	// Label/AccountLabel: the id and label from its [[<family>.profiles]]
+	// entry (or the family default), and the most specific identity the
+	// adapter can show (a login email, else the account's home directory).
+	// Empty for providers without per-account profiles.
+	ProfileID    string
+	ProfileLabel string
+	Identity     string
 }
 
 // ProviderPaneActivity is windowed per-pane activity for one provider.
