@@ -211,13 +211,15 @@ export default class AgentUsage extends View {
 
   group(g, index, t, now) {
     const first = g.members[0], grouped = g.members.length > 1;
-    const name = grouped ? first.groupLabel || FAMILIES[g.family]?.name || first.label : first.label;
+    // A lone account is headed by its provider (a profile label such as
+    // "codex" is just the account's name and adds nothing on its own).
+    const name = grouped ? first.groupLabel || FAMILIES[g.family]?.name || first.label : FAMILIES[g.family]?.name ?? first.label;
     const heading = h_flex().h(34).gap(9).items_center()
       .child(this.icon(g.family, t))
       .child(div().font_semibold().child(name))
       .when(!grouped && Boolean(first.planType), (el) => el.child(div().text_color(t.muted).child(`· ${first.planType}`)))
       .child(div().flex_1())
-      .child(div().text_size(grouped ? 12 : 11).text_color(t.dim).max_w(150).truncate()
+      .child(div().text_size(grouped ? 12 : 11).text_color(t.dim).max_w(240).truncate()
         .child(grouped ? `${g.members.length} accounts` : this.hint(first)));
     return v_flex().id(`group-${index}`).px(14).pt(6).pb(10).when(index > 0, (el) => el.border_t(1).border_color(t.border))
       .child(heading)
@@ -239,7 +241,7 @@ export default class AgentUsage extends View {
         .child(div().font_medium().child(p.profileLabel || p.accountLabel || p.label))
         .when(Boolean(p.planType), (el) => el.child(div().text_color(t.muted).child(`· ${p.planType}`)))
         .child(div().flex_1())
-        .child(div().text_size(11).text_color(t.dim).max_w(150).truncate().child(this.hint(p))));
+        .child(div().text_size(11).text_color(t.dim).max_w(240).truncate().child(this.hint(p))));
     }
     for (const w of p.windows) {
       const band = bands[w.band] ?? t.muted;
@@ -259,7 +261,15 @@ export default class AgentUsage extends View {
         .child(div().flex_none().text_color(t.dim).child(`${p.paneActivity.tag} share`))
         .child(div().flex_1().min_w(0).text_color(t.muted).child(share.map((s) => `${s.label} ${Math.round(s.sharePercent)}%`).join(" · "))));
     }
-    if (!p.windows.length && p.note) rows.push(this.callout(p.note, t));
+    if (p.status === "no-data") {
+      // Nothing recorded yet is a normal state, not a problem: say when it fills in.
+      const agent = FAMILIES[p.family]?.name ?? p.label;
+      rows.push(div().py(3).text_size(12).text_color(t.dim)
+        .child(p.home ? `No usage yet · updates when ${agent} runs in ${tilde(p.home)}` : "No usage yet"));
+      return v_flex().pl(25).when(grouped, (el) => el.pt(4)).children(rows);
+    }
+    // The boxed callout is for something the user must fix (a login).
+    if (p.status === "needs-login" && p.note) rows.push(this.callout(p.note, t));
     else if (p.note && !stale) rows.push(div().py(2).text_size(11.5).text_color(t.dim).child(p.note));
     const meta = stale
       ? [`stale ~${p.staleMinutes}m ago`, sourceText(p.source)]
@@ -292,7 +302,8 @@ export default class AgentUsage extends View {
         .child(div().w(18).h(6).rounded(3).bg(bands[w.band] + "26").child(div().h_full().rounded(3).bg(bands[w.band]).w(`${Math.round(w.barFill * 100)}%`)))
         .child(div().w(34).text_right().text_size(12).text_color(bands[w.band]).child(`${w.displayPercent}%`))))
       .when(p.windows.some((w) => w.runOut?.text), (el) => el.child(div().text_size(12).text_color(t.ansi1).child("⚠")))
-      .when(!p.windows.length, (el) => el.child(div().text_size(11.5).text_color(t.dim).child(p.status === "needs-login" ? `run ${p.action}` : "no data")));
+      .when(!p.windows.length, (el) => el.child(div().text_size(11.5).text_color(t.dim)
+        .child(p.status === "needs-login" ? `run ${p.action}` : p.status === "no-data" ? "no usage yet" : "no data")));
   }
 
   empty(t) {
